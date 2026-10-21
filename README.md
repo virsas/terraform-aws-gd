@@ -6,6 +6,7 @@ A Terraform module for managing [Amazon GuardDuty](https://docs.aws.amazon.com/g
 
 - **Detector Management**: Always creates and enables a GuardDuty detector in the account and region of the provider.
 - **Feature Selection**: Enables each protection feature listed in `features_list`, such as S3 data events, EBS malware protection, RDS login events, runtime monitoring and Lambda network logs.
+- **RDS Login Events**: Manages `RDS_LOGIN_EVENTS` with its own detector and organization feature resources, and ignores `additional_configuration` so AWS-managed settings do not show as perpetual drift.
 - **Runtime Monitoring Sub-features**: For `RUNTIME_MONITORING`, explicitly disables automated agent management for EKS, ECS Fargate and EC2 so agents are managed outside of GuardDuty.
 - **Delegated Administrator**: Optionally designates a GuardDuty delegated admin account for AWS Organizations.
 - **Organization Auto-enable**: When acting as delegated admin, sets whether GuardDuty and each feature are enabled automatically for organization member accounts.
@@ -36,7 +37,7 @@ Enable a detector with the default set of protection features:
 
 ```hcl
 module "guardduty" {
-  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.1"
+  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.2"
 }
 ```
 
@@ -46,7 +47,7 @@ Enable only the features you need by overriding `features_list`:
 
 ```hcl
 module "guardduty_minimal" {
-  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.1"
+  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.2"
 
   features_list = [
     "S3_DATA_EVENTS",
@@ -61,7 +62,7 @@ Designate the security account as GuardDuty delegated administrator and automati
 
 ```hcl
 module "guardduty_admin" {
-  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.1"
+  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.2"
 
   admin_create     = true
   admin_account_id = "123456789012"
@@ -83,7 +84,7 @@ Publish findings to an S3 bucket encrypted with a customer managed KMS key. The 
 
 ```hcl
 module "guardduty_export" {
-  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.1"
+  source = "git::https://github.com/virsas/terraform-aws-gd.git?ref=v1.2"
 
   s3_arn  = "arn:aws:s3:::vss-guardduty-findings"
   kms_arn = "arn:aws:kms:eu-west-1:123456789012:key/12345678-1234-1234-1234-123456789012"
@@ -98,9 +99,11 @@ module "guardduty_export" {
 |------|------|
 | [aws_guardduty_detector.vss](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector) | resource |
 | [aws_guardduty_detector_feature.vss](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector_feature) | resource |
+| [aws_guardduty_detector_feature.rds_login_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_detector_feature) | resource |
 | [aws_guardduty_organization_admin_account.vss](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_admin_account) | resource |
 | [aws_guardduty_organization_configuration.vss](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration) | resource |
 | [aws_guardduty_organization_configuration_feature.vss](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
+| [aws_guardduty_organization_configuration_feature.rds_login_events](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_organization_configuration_feature) | resource |
 | [aws_guardduty_publishing_destination.vss](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/guardduty_publishing_destination) | resource |
 
 ---

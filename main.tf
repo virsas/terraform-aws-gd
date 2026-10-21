@@ -3,7 +3,7 @@ resource "aws_guardduty_detector" "vss" {
 }
 
 resource "aws_guardduty_detector_feature" "vss" {
-  for_each    = toset(var.features_list)
+  for_each    = toset([for f in var.features_list : f if f != "RDS_LOGIN_EVENTS"])
   detector_id = aws_guardduty_detector.vss.id
   name        = each.key
   status      = "ENABLED"
@@ -14,6 +14,17 @@ resource "aws_guardduty_detector_feature" "vss" {
       name   = additional_configuration.value
       status = "DISABLED"
     }
+  }
+}
+
+resource "aws_guardduty_detector_feature" "rds_login_events" {
+  count       = contains(var.features_list, "RDS_LOGIN_EVENTS") ? 1 : 0
+  detector_id = aws_guardduty_detector.vss.id
+  name        = "RDS_LOGIN_EVENTS"
+  status      = "ENABLED"
+
+  lifecycle {
+    ignore_changes = [additional_configuration]
   }
 }
 
@@ -31,7 +42,7 @@ resource "aws_guardduty_organization_configuration" "vss" {
 }
 
 resource "aws_guardduty_organization_configuration_feature" "vss" {
-  for_each    = var.admin_create ? toset(var.features_list) : []
+  for_each    = var.admin_create ? toset([for f in var.features_list : f if f != "RDS_LOGIN_EVENTS"]) : toset([])
   detector_id = aws_guardduty_detector.vss.id
   name        = each.key
   auto_enable = var.org_auto_enable
@@ -42,6 +53,17 @@ resource "aws_guardduty_organization_configuration_feature" "vss" {
       name        = additional_configuration.value
       auto_enable = "NONE"
     }
+  }
+}
+
+resource "aws_guardduty_organization_configuration_feature" "rds_login_events" {
+  count       = var.admin_create && contains(var.features_list, "RDS_LOGIN_EVENTS") ? 1 : 0
+  detector_id = aws_guardduty_detector.vss.id
+  name        = "RDS_LOGIN_EVENTS"
+  auto_enable = var.org_auto_enable
+
+  lifecycle {
+    ignore_changes = [additional_configuration]
   }
 }
 
